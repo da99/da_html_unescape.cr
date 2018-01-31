@@ -18,11 +18,11 @@ require "html"
 describe ":unescape!" do
 
   it "should decode apos entity" do
-    assert_unescape! "é'", "&eacute;&apos;"
+    assert "é'" == DA_HTML_UNESCAPE.unescape!("&eacute;&apos;")
   end
 
   it "should not decode dotted entity" do
-    assert_unescape! "&b.Theta;", "&b.Theta;"
+    assert "&b.Theta;" == DA_HTML_UNESCAPE.unescape!("&b.Theta;")
   end
 
   {% for x in TEST_ENTITIES_SET %}
@@ -30,8 +30,8 @@ describe ":unescape!" do
       ent     = {{x.first}}
       code    = {{x[1]}}
       decoded = {{x.last}}
-      assert_unescape! decoded, "&#x#{code.to_s(16)};"
-      assert_unescape! decoded, "&#{ent};"
+      assert decoded == DA_HTML_UNESCAPE.unescape!( "&#x#{code.to_s(16)};" )
+      assert decoded == DA_HTML_UNESCAPE.unescape!( "&#{ent};" )
     end
   {% end %}
 
@@ -49,63 +49,63 @@ describe ":unescape!" do
     ent     = "&nsubE;"
     code    = [0x2ac5.to_i, 0x0338.to_i]
     decoded = "⫅̸"
-    assert_unescape! decoded, DA_HTML_ESCAPE.escape(decoded)
+    assert decoded == DA_HTML_UNESCAPE.unescape!( DA_HTML_ESCAPE.escape(decoded) )
   end # === it "should round trip preferred entity: &nsubE; => "⫅̸""
 
   it "should round trip entity: &nsupE; => ⫆̸" do
     ent     = "&nsupE;"
     code    = [0x2ac6.to_i, 0x0338.to_i]
     decoded = "⫆̸"
-    assert_unescape! decoded, DA_HTML_ESCAPE.escape(decoded)
+    assert decoded == DA_HTML_UNESCAPE.unescape!( DA_HTML_ESCAPE.escape(decoded) )
   end # === it "should round trip preferred entity: &nsupE; => ⫆̸"
 
   it "should round trip entity: &vsubnE;" do
     ent     = "&vsubnE;"
     code    = [0x2acb.to_i, 0xfe00.to_i]
     decoded = "⫋︀"
-    assert_unescape! decoded, DA_HTML_ESCAPE.escape(decoded)
+    assert decoded == DA_HTML_UNESCAPE.unescape!( DA_HTML_ESCAPE.escape(decoded) )
   end # === it "should round trip preferred entity: &vsubnE;"
 
   it "should round trip entity: &vsubne;" do
     ent     = "&vsubne;"
     code    = [0x228a.to_i, 0xfe00.to_i]
     decoded = "⊊︀"
-    assert_unescape! decoded, DA_HTML_ESCAPE.escape(decoded)
+    assert decoded == DA_HTML_UNESCAPE.unescape!( DA_HTML_ESCAPE.escape(decoded) )
   end # === it "should round trip preferred entity: &vsubnE;"
 
   it "should decode apos entity" do
-    assert_unescape! "é'", "&eacute;&apos;"
+    assert "é'" == DA_HTML_UNESCAPE.unescape!( "&eacute;&apos;" )
   end
 
   # This does not apply to HTML:
   # it "should decode dotted entity" do
-  #   assert_unescape! "Θ", "&b.Theta;"
+  #   assert "Θ" == DA_HTML_UNESCAPE.unescape!( "&b.Theta;" )
   # end
 
   it "should decode basic entities" do
-    assert_unescape! "&", "&amp;"
-    assert_unescape! "<", "&lt;"
-    assert_unescape! "\"", "&quot;"
+    assert "&" == DA_HTML_UNESCAPE.unescape!( "&amp;" )
+    assert "<" == DA_HTML_UNESCAPE.unescape!( "&lt;" )
+    assert "\"" == DA_HTML_UNESCAPE.unescape!( "&quot;" )
   end
 
   it "should decode extended named entities" do
-    assert_unescape! "±", "&plusmn;"
-    assert_unescape! "ð", "&eth;"
-    assert_unescape! "Œ", "&OElig;"
-    assert_unescape! "œ", "&oelig;"
+    assert "±" == DA_HTML_UNESCAPE.unescape!( "&plusmn;" )
+    assert "ð" == DA_HTML_UNESCAPE.unescape!( "&eth;" )
+    assert "Œ" == DA_HTML_UNESCAPE.unescape!( "&OElig;" )
+    assert "œ" == DA_HTML_UNESCAPE.unescape!( "&oelig;" )
   end
 
   it "should decode decimal entities" do
-    assert_unescape! "“", "&#8220;"
-    assert_unescape! "…", "&#8230;"
-    assert_unescape! " ", "&#32;"
+    assert "“" == DA_HTML_UNESCAPE.unescape!( "&#8220;" )
+    assert "…" == DA_HTML_UNESCAPE.unescape!( "&#8230;" )
+    assert " " == DA_HTML_UNESCAPE.unescape!( "&#32;" )
   end
 
   it "should decode hexadecimal entities" do
-    assert_unescape! "−", "&#x2212;"
-    assert_unescape! "—", "&#x2014;"
-    assert_unescape! "`", "&#x0060;"
-    assert_unescape! "`", "&#x60;"
+    assert "−" == DA_HTML_UNESCAPE.unescape!( "&#x2212;" )
+    assert "—" == DA_HTML_UNESCAPE.unescape!( "&#x2014;" )
+    assert "`" == DA_HTML_UNESCAPE.unescape!( "&#x0060;" )
+    assert "`" == DA_HTML_UNESCAPE.unescape!( "&#x60;" )
   end
 
   it "should not mutate string being decoded" do
@@ -118,26 +118,26 @@ describe ":unescape!" do
 
   it "should decode text with mix of entities" do
     # Just a random headline - I needed something with accented letters.
-    assert_unescape!(
-      "Le tabac pourrait bientôt être banni dans tous les lieux publics en France",
-      "Le tabac pourrait bient&ocirc;t &#234;tre banni dans tous les lieux publics en France"
+    assert(
+      "Le tabac pourrait bientôt être banni dans tous les lieux publics en France" ==
+      DA_HTML_UNESCAPE.unescape!("Le tabac pourrait bient&ocirc;t &#234;tre banni dans tous les lieux publics en France")
     )
-    assert_unescape!(
-      "\"bientôt\" & 文字",
-      "&quot;bient&ocirc;t&quot; &amp; &#25991;&#x5b57;"
+    assert(
+      "\"bientôt\" & 文字" ==
+      DA_HTML_UNESCAPE.unescape!("&quot;bient&ocirc;t&quot; &amp; &#25991;&#x5b57;")
     )
   end
 
   it "should decode empty string" do
-    assert_unescape! "", ""
+    assert "" == DA_HTML_UNESCAPE.unescape!( "" )
   end
 
   it "should skip unknown entity" do
-    assert_unescape! "&bogus;", "&bogus;"
+    assert "&bogus;" == DA_HTML_UNESCAPE.unescape!( "&bogus;" )
   end
 
   it "should decode double encoded entity" do
-    assert_unescape! "&", "&amp;amp;amp;amp;amp;"
+    assert "&" == DA_HTML_UNESCAPE.unescape!( "&amp;amp;amp;amp;amp;" )
   end
 
   it "should decode null character to replacement character: \\u0000" do
@@ -150,37 +150,37 @@ describe ":unescape!" do
     (1..31).each do |codepoint|
       next if codepoint == 9
       next if codepoint == 10
-      assert_unescape! " ", "&amp;amp;amp;\#x#{codepoint.to_s(16)};"
+      assert " " == DA_HTML_UNESCAPE.unescape!( "&amp;amp;amp;\#x#{codepoint.to_s(16)};" )
     end
   end
 
   it "should decode codepoint 9 as a tab as 2 spaces" do
-    assert_unescape! "  ", "&amp;amp;amp;\#x#{9.to_s(16)};"
+    assert "  " == DA_HTML_UNESCAPE.unescape!( "&amp;amp;amp;\#x#{9.to_s(16)};" )
   end
 
   it "should decode codepoint 10 as a new line" do
-    assert_unescape! "\n", "&amp;amp;amp;\#x#{10.to_s(16)};"
+    assert "\n" == DA_HTML_UNESCAPE.unescape!( "&amp;amp;amp;\#x#{10.to_s(16)};" )
   end
 
   it "should decode codepoint 127 as a space" do
-    assert_unescape! " ", "&amp;amp;amp;\#x#{127.to_s(16)};"
+    assert " " == DA_HTML_UNESCAPE.unescape!( "&amp;amp;amp;\#x#{127.to_s(16)};" )
   end
 
   it "should decode full hexadecimal range: 32 - 126" do
     (32..126).each do |codepoint|
-      assert_unescape! [codepoint.chr].join, "&amp;amp;amp;\#x#{codepoint.to_s(16)};"
+      assert [codepoint.chr].join == DA_HTML_UNESCAPE.unescape!( "&amp;amp;amp;\#x#{codepoint.to_s(16)};" )
     end
   end
 
   # Reported by Dallas DeVries and Johan Duflost
   it "should decode named entities reported as missing in 3 0 1" do
-    assert_unescape!  [178.chr].join, "&sup2;"
-    assert_unescape! [8226.chr].join, "&bull;"
-    assert_unescape!  [948.chr].join, "&delta;"
+    assert  [178.chr].join == DA_HTML_UNESCAPE.unescape!( "&sup2;" )
+    assert [8226.chr].join == DA_HTML_UNESCAPE.unescape!( "&bull;" )
+    assert  [948.chr].join == DA_HTML_UNESCAPE.unescape!( "&delta;" )
   end
 
   it "should decode only first element in masked entities first" do
-    assert_unescape! "ഒ", "&amp;#3346;"
+    assert "ഒ" == DA_HTML_UNESCAPE.unescape!( "&amp;#3346;" )
   end
 
   it "should decode invalid brackets" do
@@ -199,7 +199,7 @@ describe ":unescape! string encodings" do
   it "should decode ascii to utf8" do
     s = "&#x3c;&eacute;lan&#x3e;"
 
-    assert_unescape! "<élan>", s
+    assert "<élan>" == DA_HTML_UNESCAPE.unescape!( s )
     actual = DA_HTML_UNESCAPE.unescape!(s)
     assert actual != nil
     if actual
@@ -212,7 +212,7 @@ describe ":unescape! string encodings" do
     assert(s.valid_encoding? == true)
 
     actual = DA_HTML_UNESCAPE.unescape!(s)
-    assert_unescape! "<élan>", s
+    assert "<élan>" == DA_HTML_UNESCAPE.unescape!( s )
     assert actual != nil
     if actual
       assert(actual.valid_encoding? == true)
@@ -244,11 +244,10 @@ describe ":unescape!" do # === Imported from Mu_Clean.
 
   it "un-escapes until it can no longer escape." do
     str = "Hello < Hello <"
-    assert(
-      DA_HTML_UNESCAPE.unescape!(
-        3.times.reduce(str) { |acc, i| HTML.escape(acc) }
-      ) == str
+    actual = DA_HTML_UNESCAPE.unescape!(
+      3.times.reduce(str) { |acc, i| HTML.escape(acc) }
     )
+    assert(actual == str)
   end
 
   it "un-escapes escaped text mixed with HTML" do

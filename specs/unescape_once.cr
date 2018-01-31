@@ -1,10 +1,6 @@
 
 describe ":unescape" do
 
-  it "should replace \"unit separator\" (31 ASCII) with a space" do
-    assert_escape "a ", "a\u{1f}"
-  end
-
   it "should decode apos entity" do
     assert_unescape "é'", "&eacute;&apos;"
   end
@@ -25,11 +21,12 @@ describe ":unescape" do
 
   {% for x in TEST_ENTITIES_SET %}
     it "should round trip preferred entity: &{{x.first.id}}; => {{x.last.id}}" do
-      ent     = {{x.first}}
+      name    = {{x.first}}
       code    = {{x[1]}}
       decoded = {{x.last}}
-      assert_escape "&#x#{code.to_s(16)};", DA_HTML_ESCAPE.unescape_once("&#{ent};")
-      assert_unescape decoded,                DA_HTML_ESCAPE.escape(decoded)
+      encoded = DA_HTML_ESCAPE.escape(decoded)
+      assert decoded == DA_HTML_UNESCAPE.unescape_once("&#{name};")
+      assert decoded == DA_HTML_UNESCAPE.unescape_once(encoded)
     end
   {% end %}
 
@@ -99,9 +96,9 @@ describe ":unescape" do
   it "should not mutate string being decoded" do
     original = "&lt;&#163;"
     input = original.dup
-    DA_HTML_ESCAPE.unescape_once(input)
+    DA_HTML_UNESCAPE.unescape_once(input)
 
-    input.should eq(original)
+    assert input == original
   end
 
   it "should decode text with mix of entities" do
@@ -130,8 +127,8 @@ describe ":unescape" do
 
   it "should decode null character to replacement character: \\u0000" do
     encoded = "&#x0;"
-    decoded = DA_HTML_ESCAPE.unescape_once(encoded) || "error"
-    decoded.codepoints.should eq([65533])
+    decoded = DA_HTML_UNESCAPE.unescape_once(encoded) || "error"
+    assert(decoded.codepoints == [65533])
   end
 
   # Faults found and patched by Moonwolf
@@ -168,11 +165,11 @@ describe ":unescape" do
       &#X00003C; &#X000003C; \x3c \x3C \u003c \u003C
     "
 
-    expected = DA_HTML_ESCAPE.unescape_once( bracket )
+    expected = DA_HTML_UNESCAPE.unescape_once( bracket )
     if expected
       expected = expected.split.uniq.join
     end
-    expected.should eq("<")
+    assert(expected == "<")
   end # === it "should decode invalid brackets"
 
 end # === desc ":unescape"
@@ -180,21 +177,24 @@ end # === desc ":unescape"
 describe ":unescape string encodings" do
 
   it "should decode ascii to utf8" do
-    s = "&#x3c;&eacute;lan&#x3e;"
-
-    assert_unescape "<élan>", s
-    assert_not_nil DA_HTML_ESCAPE.unescape_once(s) do |x|
-      x.valid_encoding?.should eq(true)
+    s      = "&#x3c;&eacute;lan&#x3e;"
+    actual = DA_HTML_UNESCAPE.unescape_once(s)
+    assert "<élan>" == actual
+    assert actual != nil
+    if actual
+      assert(actual.valid_encoding? == true)
     end
   end
 
   it "should decode utf8 to utf8" do
     s = "&#x3c;&eacute;lan&#x3e;"
-    s.valid_encoding?.should eq(true)
+    assert(s.valid_encoding? == true)
 
-    assert_unescape "<élan>", s
-    assert_not_nil DA_HTML_ESCAPE.unescape_once(s) do |x|
-      x.valid_encoding?.should eq(true)
+    actual = DA_HTML_UNESCAPE.unescape_once(s)
+    assert "<élan>" == actual
+    assert actual != nil
+    if actual
+      assert(actual.valid_encoding? == true)
     end
   end
 
@@ -207,9 +207,10 @@ describe ":unescape string encodings" do
     origin = "好"
     encoded = DA_HTML_ESCAPE.escape(origin)
 
-    assert_escape encoded, str
-    assert_not_nil DA_HTML_ESCAPE.escape(str) do |x|
-      x.valid_encoding?.should eq(true)
+    actual = DA_HTML_UNESCAPE.unescape_once(encoded)
+    assert actual != nil
+    if actual
+      assert(actual.valid_encoding? == true)
     end
   end
 

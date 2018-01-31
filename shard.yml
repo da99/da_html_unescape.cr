@@ -1,7 +1,12 @@
 name: da_html_unescape
 version: 0.0.0
 dependencies:
+  myhtml:
+    github: kostya/myhtml
+development_dependencies:
   inspect_bang:
     github: da99/inspect_bang.cr
   da_spec:
     github: da99/da_spec.cr
+  da_html_escape:
+    github: da99/da_html_escape.cr

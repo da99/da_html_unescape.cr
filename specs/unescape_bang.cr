@@ -17,10 +17,6 @@ require "html"
 
 describe ":unescape!" do
 
-  it "should replace \"unit separator\" (31 ASCII) with a space" do
-    assert_escape "a ", "a\u{1f}"
-  end
-
   it "should decode apos entity" do
     assert_unescape! "é'", "&eacute;&apos;"
   end
@@ -41,11 +37,11 @@ describe ":unescape!" do
 
   {% for x in TEST_ENTITIES_SET %}
     it "should round trip preferred entity: &{{x.first.id}}; => {{x.last.id}}" do
-      ent     = {{x.first}}
+      name    = {{x.first}}
       code    = {{x[1]}}
       decoded = {{x.last}}
-      assert_escape "&#x#{code.to_s(16)};", DA_HTML_ESCAPE.unescape!("&amp;amp;amp;#{ent};")
-      assert_unescape! decoded,             DA_HTML_ESCAPE.escape(decoded)
+      assert "&#x#{code.to_s(16)};" == DA_HTML_ESCAPE.escape(DA_HTML_UNESCAPE.unescape!("&amp;amp;amp;#{name};") || "")
+      assert decoded == DA_HTML_UNESCAPE.unescape!( DA_HTML_ESCAPE.escape(decoded) )
     end
   {% end %}
 
@@ -115,9 +111,9 @@ describe ":unescape!" do
   it "should not mutate string being decoded" do
     original = "&amp;lt;&#163;"
     input = original.dup
-    DA_HTML_ESCAPE.unescape!(input)
+    DA_HTML_UNESCAPE.unescape!(input)
 
-    input.should eq(original)
+    assert input == original
   end
 
   it "should decode text with mix of entities" do
@@ -146,8 +142,8 @@ describe ":unescape!" do
 
   it "should decode null character to replacement character: \\u0000" do
     encoded = "&amp;amp;#x0;"
-    decoded = DA_HTML_ESCAPE.unescape!(encoded) || "error"
-    decoded.codepoints.should eq([65533])
+    decoded = DA_HTML_UNESCAPE.unescape!(encoded) || "error"
+    assert(decoded.codepoints == [65533])
   end
 
   it "should decode hexadecimal range as a space: 1 - 31 (except 9 - tab, 10 - line feed)" do
@@ -189,11 +185,11 @@ describe ":unescape!" do
 
   it "should decode invalid brackets" do
     # %3C 
-    expected = DA_HTML_ESCAPE.unescape!( BRACKET )
+    expected = DA_HTML_UNESCAPE.unescape!( BRACKET )
     if expected
       expected = expected.split.uniq.join
     end
-    expected.should eq("<")
+    assert(expected == "<")
   end # === it "should decode invalid brackets"
 
 end # === desc ":unescape"
@@ -204,18 +200,22 @@ describe ":unescape! string encodings" do
     s = "&#x3c;&eacute;lan&#x3e;"
 
     assert_unescape! "<élan>", s
-    assert_not_nil DA_HTML_ESCAPE.unescape!(s) do |x|
-      x.valid_encoding?.should eq(true)
+    actual = DA_HTML_UNESCAPE.unescape!(s)
+    assert actual != nil
+    if actual
+      assert(actual.valid_encoding? == true)
     end
   end
 
   it "should decode utf8 to utf8" do
     s = "&#x3c;&eacute;lan&#x3e;"
-    s.valid_encoding?.should eq(true)
+    assert(s.valid_encoding? == true)
 
+    actual = DA_HTML_UNESCAPE.unescape!(s)
     assert_unescape! "<élan>", s
-    assert_not_nil DA_HTML_ESCAPE.unescape!(s) do |x|
-      x.valid_encoding?.should eq(true)
+    assert actual != nil
+    if actual
+      assert(actual.valid_encoding? == true)
     end
   end
 
@@ -228,9 +228,12 @@ describe ":unescape! string encodings" do
     origin = "好"
     encoded = DA_HTML_ESCAPE.escape(origin)
 
-    assert_escape encoded, str
-    assert_not_nil DA_HTML_ESCAPE.escape(str) do |x|
-      x.valid_encoding?.should eq(true)
+    assert DA_HTML_UNESCAPE.unescape!(encoded) == str
+
+    actual = DA_HTML_UNESCAPE.unescape!(encoded)
+    assert(actual != nil)
+    if actual
+      assert(actual.valid_encoding? == true)
     end
   end
 
@@ -241,28 +244,27 @@ describe ":unescape!" do # === Imported from Mu_Clean.
 
   it "un-escapes until it can no longer escape." do
     str = "Hello < Hello <"
-    DA_HTML_ESCAPE.unescape!(
-      3.times.reduce(str) { |acc, i| HTML.escape(acc) }
-    ).should eq(str)
+    assert(
+      DA_HTML_UNESCAPE.unescape!(
+        3.times.reduce(str) { |acc, i| HTML.escape(acc) }
+      ) == str
+    )
   end
 
   it "un-escapes escaped text mixed with HTML" do
     s = "<p>Hi&amp;</p>";
-    DA_HTML_ESCAPE.unescape!(s)
-      .should eq("<p>Hi&</p>")
+    assert(DA_HTML_UNESCAPE.unescape!(s) == "<p>Hi&</p>")
   end
 
   hello_with_special_chars = "Hello & World ©®∆"
   it "un-escapes special chars: \"#{hello_with_special_chars}\"" do
     s = "Hello &amp; World &#169;&#174;&#8710;"
-    DA_HTML_ESCAPE.unescape!(s)
-      .should eq(hello_with_special_chars)
+    assert(DA_HTML_UNESCAPE.unescape!(s) == hello_with_special_chars)
   end
 
   it "un-escapes all 70 different combos of '<'" do
-    (DA_HTML_ESCAPE.unescape!(BRACKET) || "")
-      .split.uniq.join(" ")
-      .should eq("<")
+    actual = (DA_HTML_UNESCAPE.unescape!(BRACKET) || "").split.uniq.join(" ")
+    assert(actual == "<")
   end
 
 end # === describe :un_e

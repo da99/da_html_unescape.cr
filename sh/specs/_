@@ -1,0 +1,47 @@
+#!/usr/bin/env zsh
+#
+# === {{CMD}}
+#
+set -u -e -o pipefail
+
+local +x ORIGINAL_ARGS="$@"
+
+if [[ -z "$@" ]]; then
+  local +x ACTION="watch"
+else
+  local +x ACTION="$1"; shift
+fi
+
+case "$ACTION" in
+
+  watch)
+    local +x cmd="da_html_unescape.cr specs run $@"
+    ${=cmd} || :
+    process watch "-r ." "$cmd"
+    ;;
+
+  run)
+    reset
+
+    case "${CHANGED_FILE:-}" in
+      *shard.yml)
+        my_crystal __ deps update
+        ;;
+    esac
+
+    cd "$THIS_DIR"
+    mkdir -p tmp/in tmp/out
+    sh_color ORANGE "=== {{Compiling}} specs..."
+    my_crystal __ build specs/specs.cr -o tmp/out/specs
+    sh_color ORANGE "=== {{Running}}: tmp/out/specs ..."
+    tmp/out/specs
+    sh_color GREEN "=== {{PASSED}} specs ==="
+    ;;
+
+  *)
+    echo "!!! Unknown arguments: $ORIGINAL_ARGS" >&2
+    exit 1
+    ;;
+
+esac
+

@@ -1,9 +1,18 @@
 
-  # myhtml:
-  #   github: kostya/myhtml
 require "myhtml"
 
-module DA_HTML_ESCAPE
+module DA_HTML_UNESCAPE
+
+  extend self
+
+  CNTRL_CHAR_REGEX = /[^\P{C}\n]+/
+  DOUBLE_SPACE     = "  "
+  SPACE            = ' '
+  TAB              = '\t'
+
+  def clean(s)
+    s.gsub(TAB, DOUBLE_SPACE).gsub(CNTRL_CHAR_REGEX, SPACE)
+  end # === def clean
 
   def unescape_once(source)
     return nil unless source.valid_encoding?
